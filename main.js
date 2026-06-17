@@ -1,75 +1,90 @@
-// If the A button is pressed, display the greetings string
+/**
+ * --------------------------------------------------------- 
+ * MR. DECOY aka the PogBot (version 1.2)
+ *
+ * Written by Tyler Bifolchi
+ * Tenor-Z on Github
+ * ---------------------------------------------------------
+ * 
+ * I wrote this in grade 12, and I decided to go and
+ * rewrite it since I lost the original microcontroller and
+ * flashed code. It didn't work as expected so here is the
+ * fully-functional, revised version of the program, which
+ * serves as a fun radio worm that lasts until devices are
+ * reflashed
+ * ---------------------------------------------------------
+ */
+
+// CONFIGURATION & INITIALIZATION
+let isInfected = false
+const INFECTION_NUMBER = 9 
+
+radio.setTransmitPower(7) // Maximum range
+
+// Set this to true if you want the device with this code to become patient zero
+const IS_PATIENT_ZERO = false
+
+if (IS_PATIENT_ZERO) {
+    infectThisDevice()
+} else {
+    basic.showIcon(IconNames.Happy)
+}
+
+// The button-triggered easter egg from the original
 input.onButtonPressed(Button.A, function () {
     basic.showString("Greetings from Mr. Decoy aka PogBot -- Written by Tyler Bifolchi (TENOR-Z ON GITHUB)")
 })
-// Discover clients and their infection status and populate a list of discovered client IDs and their virus status
-// It only runs when a radio signal from another micro:bit is recieved
-radio.onReceivedValue(function (name, value) {
-    if (name == "discover") {
-        // If the packet was recieved on the -1 (0) pin (if not already infected)
-        if (virus_clients.indexOf(radio.receivedPacket(RadioPacketProperty.SerialNumber)) == -1) {
-            // Forward it
-            virus_clients.push(radio.receivedPacket(RadioPacketProperty.SerialNumber))
-            infection_status.push(value)
+
+// Here if we received a message from an infected device
+radio.onReceivedNumber(function (receivedNumber) {
+    if (receivedNumber == INFECTION_NUMBER && !isInfected) {
+        infectThisDevice()
+    }
+})
+
+// This is the main infection function
+function infectThisDevice() {
+    isInfected = true
+    music.playMelody("C5 B A G F E D C ", 240)
+    
+    basic.clearScreen()
+    basic.showLeds(`
+        . # . # .
+        . . . . .
+        . . # . .
+        . # . # .
+        . . # . .
+        `)
+}
+
+// The background sweep
+// Constantly checks channels 0 to 9 and transmits itself to anyone it finds
+loops.inBackground(function () {
+    while (true) {
+        if (!isInfected) {
+            // HEALTHY MODE: Scan channels 0 to 9 for the infection ---
+            for (let scanChannel = 0; scanChannel <= 9; scanChannel++) {
+                // If we get infected mid-loop, stop scanning
+                if (isInfected) break; 
+                
+                radio.setGroup(scanChannel)
+                // Pause for 150ms on each channel to listen for incoming packets
+                basic.pause(150) 
+            }
         } else {
-            // If it is already infected, add it to the list to prevent reinfection (it would eventually be reflashed after a number of infections)
-            infection_status[virus_clients.indexOf(radio.receivedPacket(RadioPacketProperty.SerialNumber))] = value
+            // INFECTED MODE: Sweep channels 0 to 9 to spread the infection ---
+            for (let sendChannel = 0; sendChannel <= 9; sendChannel++) {
+                radio.setGroup(sendChannel)
+                radio.sendNumber(INFECTION_NUMBER)
+                
+                // Visual activity flash on the center LED
+                led.toggle(2, 2)
+                basic.pause(40) 
+                led.toggle(2, 2)
+            }
+            // Wait 2 seconds before executing the next broadcast wave
+            // Prevents it from being a flood
+            basic.pause(2000)
         }
     }
 })
-/**
- * ---------------------------------------------------------
- * 
- * MR. DECOY aka the PogBot
- * 
- * Written by Tyler Bifolchi
- * 
- * Tenor-Z on Github
- * 
- * ---------------------------------------------------------
- * 
- * I wrote this shit in grade 12, and I decided to go and
- * 
- * rewrite it since I lost the original microcontroller and
- * 
- * flashed code.
- * 
- * ---------------------------------------------------------
- * 
- * It's hip to fuck bees
- */
-/**
- * List that checks whether a micro:bit was recently infected
- */
-
-
-let infection_status: number[] = []
-let virus_clients: number[] = []
-// List of infected clients (this goes unused)
-// The initial thing that shows we are connected
-
-basic.showIcon(IconNames.Happy)
-music.playMelody("D F A - B D A G ", 120)
-
-// Infect on the set group 12
-radio.setGroup(12)
-virus_clients = []
-infection_status = []
-
-// Send itself to a random micro:bit
-radio.sendValue("infect", virus_clients[randint(0, virus_clients.length - 1)])
-
-// basic.showArrow(ArrowNames.North)
-// Give it time to start on the other side
-basic.pause(500)
-// This goes unused
-let ranonce = 1
-// And show the pog face afterwards
-basic.clearScreen()
-basic.showLeds(`
-    . # . # .
-    . . . . .
-    . . # . .
-    . # . # .
-    . . # . .
-    `)
