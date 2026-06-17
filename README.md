@@ -1,7 +1,5 @@
 # Mr.-Decoy
-A Micro:Bit "worm" that reproduces itself via radio frequency
-It is technically a worm since it randomly finds other micro:bit microcontrollers with the built in radio, but there is no important
-code being run on these devices half of the time, so is a worm really that harmful to it?
+A lightweight, self-replicating radio worm simulation built for BBC Micro:bit devices using TypeScript/MakeCode. 
 
-Even though it uses a strange amalgamation of Javascript, it did a good job introducing me to the language and
-writing this was fun as fuck
+This project is meant to demonstrate decentralized ad-hoc networking, parallel processing using background execution threads, and multi-channel sweeping protocols.
+Originally conceived in high school, this repository has been refactored to replace an unstable, array-dependent tracking mechanism with a robust, event-driven dual-sweep architecture.
